@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>অনলাইন রেজাল্ট পোর্টাল</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background-color: #f0f4f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 15px;
+        }
+        .container {
+            background: #ffffff;
+            width: 100%;
+            max-width: 480px;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border-top: 5px solid #0d9488;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header h2 {
+            color: #0f766e;
+            font-size: 22px;
+        }
+        .header p {
+            color: #64748b;
+            font-size: 14px;
+            margin-top: 4px;
+        }
+        .search-box {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 16px;
+            outline: none;
+        }
+        input:focus {
+            border-color: #0d9488;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #0d9488;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        button:hover {
+            background-color: #0f766e;
+        }
+        .result-card {
+            display: none;
+            margin-top: 20px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            background: #f8fafc;
+        }
+        .student-info {
+            margin-bottom: 15px;
+            border-bottom: 1px dashed #cbd5e1;
+            padding-bottom: 10px;
+        }
+        .student-info p {
+            margin: 5px 0;
+            font-size: 15px;
+            color: #334155;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        th, td {
+            border: 1px solid #cbd5e1;
+            padding: 8px;
+            text-align: left;
+            font-size: 14px;
+        }
+        th {
+            background-color: #0d9488;
+            color: white;
+        }
+        .status-pass {
+            color: #16a34a;
+            font-weight: bold;
+        }
+        .status-fail {
+            color: #dc2626;
+            font-weight: bold;
+        }
+        .print-btn {
+            background-color: #3b82f6;
+            margin-top: 10px;
+        }
+        .error-msg {
+            color: #dc2626;
+            text-align: center;
+            display: none;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        @media print {
+            .search-box, .print-btn {
+                display: none;
+            }
+            body {
+                background: white;
+            }
+            .container {
+                box-shadow: none;
+                border: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2>বার্ষিক পরীক্ষার ফলাফল ২০২৬</h2>
+        <p>ফলাফল জানতে নিচে রোল নম্বর লিখুন</p>
+    </div>
+
+    <div class="search-box">
+        <input type="text" id="rollInput" placeholder="রোল নম্বর লিখুন (যেমন: 2526)">
+        <button onclick="searchResult()">ফলাফল দেখুন</button>
+    </div>
+
+    <p class="error-msg" id="errorMsg">দুঃখিত! এই রোল নম্বরের কোনো ফলাফল পাওয়া যায়নি।</p>
+
+    <div class="result-card" id="resultCard">
+        <div class="student-info">
+            <p><strong>নাম:</strong> <span id="stName"></span></p>
+            <p><strong>রোল নম্বর:</strong> <span id="stRoll"></span></p>
+            <p><strong>বিভাগ:</strong> <span id="stDept"></span></p>
+            <p><strong>ফলাফল:</strong> <span id="stStatus"></span></p>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>বিষয়</th>
+                    <th>প্রাপ্ত নম্বর</th>
+                    <th>গ্রেড</th>
+                    <th>পয়েন্ট</th>
+                </tr>
+            </thead>
+            <tbody id="marksBody"></tbody>
+        </table>
+
+        <button class="print-btn" onclick="window.print()">মার্কশিট প্রিন্ট / PDF করুন</button>
+    </div>
+</div>
+
+<script>
+    // আপনার দেওয়া টেবিলের ডেটা এখানে সেট করা হলো
+    const resultsData = {
+        "2526": {
+            name: "আহাদ",
+            dept: "বিজ্ঞান",
+            subjects: {
+                "পদার্থ": 89,
+                "রসায়ন": 82,
+                "জীব": 76,
+                "গণিত": 90
+            }
+        },
+        "2527": {
+            name: "রনি",
+            dept: "বিজ্ঞান",
+            subjects: {
+                "পদার্থ": 80,
+                "রসায়ন": 67,
+                "জীব": 45,
+                "গণিত": 99
+            }
+        },
+        "2528": {
+            name: "আবির",
+            dept: "মানবিক",
+            subjects: {
+                "পদার্থ": 89,
+                "রসায়ন": 87,
+                "জীব": 90,
+                "গণিত": 87
+            }
+        }
+    };
+
+    // নম্বর থেকে গ্রেড এবং পয়েন্ট বের করার ফাংশন
+    function calculateGrade(marks) {
+        if (marks >= 80) return { grade: 'A+', point: 5.0 };
+        if (marks >= 70) return { grade: 'A', point: 4.0 };
+        if (marks >= 60) return { grade: 'A-', point: 3.5 };
+        if (marks >= 50) return { grade: 'B', point: 3.0 };
+        if (marks >= 40) return { grade: 'C', point: 2.0 };
+        if (marks >= 33) return { grade: 'D', point: 1.0 };
+        return { grade: 'F', point: 0.0 };
+    }
+
+    function searchResult() {
+        const roll = document.getElementById("rollInput").value.trim();
+        const resultCard = document.getElementById("resultCard");
+        const errorMsg = document.getElementById("errorMsg");
+
+        if (resultsData[roll]) {
+            const student = resultsData[roll];
+            document.getElementById("stName").innerText = student.name;
+            document.getElementById("stRoll").innerText = roll;
+            document.getElementById("stDept").innerText = student.dept;
+
+            let totalPoint = 0;
+            let totalSubjects = 0;
+            let isFailed = false;
+            const marksBody = document.getElementById("marksBody");
+            marksBody.innerHTML = "";
+
+            for (const [subName, marks] of Object.entries(student.subjects)) {
+                const res = calculateGrade(marks);
+                if (res.grade === 'F') {
+                    isFailed = true;
+                }
+                totalPoint += res.point;
+                totalSubjects++;
+
+                const row = `<tr>
+                    <td>${subName}</td>
+                    <td>${marks}</td>
+                    <td>${res.grade}</td>
+                    <td>${res.point.toFixed(1)}</td>
+                </tr>`;
+                marksBody.innerHTML += row;
+            }
+
+            const statusEl = document.getElementById("stStatus");
+            if (isFailed) {
+                statusEl.innerText = "অকৃতকার্য (Fail)";
+                statusEl.className = "status-fail";
+            } else {
+                let gpa = (totalPoint / totalSubjects).toFixed(2);
+                statusEl.innerText = `উত্তীর্ণ (GPA: ${gpa})`;
+                statusEl.className = "status-pass";
+            }
+
+            resultCard.style.display = "block";
+            errorMsg.style.display = "none";
+        } else {
+            resultCard.style.display = "none";
+            errorMsg.style.display = "block";
+        }
+    }
+</script>
+
+</body>
+</html>
